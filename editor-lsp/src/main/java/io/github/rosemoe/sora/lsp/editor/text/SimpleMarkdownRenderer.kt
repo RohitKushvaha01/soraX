@@ -798,7 +798,7 @@ object SimpleMarkdownRenderer {
     }
 
     private fun isList(line: String): Boolean {
-        return unorderedPattern.matches(line) || orderedPattern.matches(line)
+        return unorderedPattern.matcher(line).lookingAt() || orderedPattern.matcher(line).lookingAt()
     }
 
     private fun isOrderedList(line: String): Boolean {

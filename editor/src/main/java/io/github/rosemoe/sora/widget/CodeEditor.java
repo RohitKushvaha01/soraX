@@ -128,7 +128,6 @@ import io.github.rosemoe.sora.text.LineSeparator;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
-import io.github.rosemoe.sora.text.TextUtilsP;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.util.Chars;
 import io.github.rosemoe.sora.util.ClipDataUtils;
@@ -707,6 +706,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         array.recycle();
     }
 
+    @NonNull
     public SnippetController getSnippetController() {
         return snippetController;
     }
@@ -714,8 +714,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     /**
      * Get {@code DirectAccessProps} object of the editor.
      * <p>
-     * You can update some features in editor with the instance without disturb to call methods.
+     * You can adjust some settings of the editor by modifying the fields in the object direcly.
      */
+    @NonNull
     public DirectAccessProps getProps() {
         return props;
     }
@@ -1040,7 +1041,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
                     || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
                     || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W
-                    || keyCode == KeyEvent.KEYCODE_ENTER;
+                    || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_SPACE;
         }
 
 
@@ -1905,12 +1906,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         int l = cursor.getRightLine();
         int column = cursor.getRightColumn();
         boolean visible = true;
-        float x = measureTextRegionOffset();
-        x = x + layout.getCharLayoutOffset(l, column)[1];
-        x = x - getOffsetX();
+        float[] offsets = layout.getCharLayoutOffset(l, column);
+        float x = measureTextRegionOffset() + offsets[1] - getOffsetX();
+        float charBottom = offsets[0] - getOffsetY();
+        float charTop = charBottom - getRowHeight();
+        float charBaseline = getRowBaseline(Math.round(charTop / (float) getRowHeight()));
         if (x < 0) {
             visible = false;
             x = 0;
+        } else if (x > getWidth()) {
+            visible = false;
+            x = getWidth();
         }
         var composingText = inputConnection.composingText;
         if (composingText.preSetComposing) {
@@ -1929,7 +1935,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (composingText.isComposing()) {
                 builder.setComposingText(composingText.startIndex, text.substring(composingText.startIndex, composingText.endIndex));
             }
-            builder.setInsertionMarkerLocation(x, getRowTop(l) - getOffsetY(), getRowBaseline(l) - getOffsetY(), getRowBottom(l) - getOffsetY(), visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
+            builder.setInsertionMarkerLocation(x, charTop, charBaseline, charBottom, visible ? CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION : CursorAnchorInfo.FLAG_HAS_INVISIBLE_REGION);
             inputMethodManager.updateCursorAnchorInfo(this, builder.build());
         }
         return x;
@@ -1986,9 +1992,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
             // Do not put cursor inside combined characters
             int begin;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                begin = TextUtilsP.getOffsetForBackspaceKey(text.getLine(cur.getLeftLine()), col);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                begin = TextUtils.getOffsetForBackspaceKey(text.getLine(cur.getLeftLine()), col);
             } else {
+                // Devices under API 23 does not use the strategy above
                 begin = TextLayoutHelper.get().getCurPosLeft(col, text.getLine(cur.getLeftLine()));
             }
             int end = cur.getLeftColumn();

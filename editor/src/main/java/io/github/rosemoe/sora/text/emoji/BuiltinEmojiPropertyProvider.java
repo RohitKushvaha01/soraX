@@ -1,7 +1,7 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2024  Rosemoe
+ *    Copyright (C) 2020-2026  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -20,29 +20,31 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
-@SuppressWarnings("unused")
-object Versions {
-    // Project versions
-    private const val version = "0.24.6"
-    const val versionCode = 95
+ */
+package io.github.rosemoe.sora.text.emoji;
 
-    val appVersionName by lazy {
-        if (CI.isCiBuild) {
-            "$version-${CI.commitHash}"
-        } else "$version-${System.currentTimeMillis()}"
+class BuiltinEmojiPropertyProvider implements EmojiPropertyProvider {
+
+    public final static BuiltinEmojiPropertyProvider INSTANCE = new BuiltinEmojiPropertyProvider();
+
+    @Override
+    public boolean isVariationSelector(int codePoint) {
+        return UnicodeEmojiData.isVariationSelector(codePoint);
     }
 
-    val artifactVersion by lazy {
-        if (CI.isCiBuild) {
-            "$version-SNAPSHOT"
-        } else version
+    @Override
+    public boolean isEmoji(int codePoint) {
+        return UnicodeEmojiData.isEmoji(codePoint);
     }
 
-    // Platform & Tool versions
-    const val buildToolsVersion = "37.0.0"
-    const val compileSdkVersion = 37
-    const val minSdkVersion = 23
-    const val minSdkVersionHighApi = 26
-    const val targetSdkVersion = 37
+    @Override
+    public boolean isEmojiModifier(int codePoint) {
+        return UnicodeEmojiData.isEmojiModifier(codePoint);
+    }
+
+    @Override
+    public boolean isEmojiModifierBase(int codePoint) {
+        return UnicodeEmojiData.isEmojiModifierBase(codePoint);
+    }
+
 }

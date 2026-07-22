@@ -27,20 +27,69 @@ jobs:
           git remote add upstream https://github.com/Rosemoe/sora-editor.git
           git fetch upstream main
 
-      - name: Check for conflicts (dry run)
-        id: conflict_check
+      - name: Merge upstream
+        id: merge
         run: |
-          git merge --no-commit --no-ff upstream/main || echo "HAS_CONFLICT=true" >> $GITHUB_OUTPUT
-          git merge --abort 2>/dev/null || true
+          UPSTREAM_REV=$(git rev-parse upstream/main)
+          HEAD_REV=$(git rev-parse HEAD)
 
-      - name: Merge if no conflicts
-        if: steps.conflict_check.outputs.HAS_CONFLICT != 'true'
+          if [ "$UPSTREAM_REV" = "$HEAD_REV" ]; then
+            echo "Already up to date."
+            echo "CHANGES=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor HEAD upstream/main; then
+            echo "Fast-forward possible."
+            git merge upstream/main --ff-only
+            echo "CHANGES=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ "$(git merge-base upstream/main HEAD)" = "$UPSTREAM_REV" ]; then
+            echo "Upstream already merged, nothing to sync."
+            echo "CHANGES=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "History diverged, attempting merge..."
+          git merge upstream/main --no-commit --no-ff || true
+
+          conflicts=$(git diff --name-only --diff-filter=U 2>/dev/null || true)
+
+          if [ -n "$conflicts" ]; then
+            echo "Conflicts in:"
+            echo "$conflicts"
+
+            while IFS= read -r file; do
+              [ -z "$file" ] && continue
+              case "$file" in
+                README*|LICENSE)
+                  echo "Auto-resolving (ours): $file"
+                  git checkout --ours "$file"
+                  git add "$file"
+                  ;;
+              esac
+            done <<< "$conflicts"
+
+            remaining=$(git diff --name-only --diff-filter=U 2>/dev/null || true)
+            if [ -n "$remaining" ]; then
+              echo "::error::Code conflicts require manual resolution: $remaining"
+              git merge --abort
+              exit 1
+            fi
+          fi
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            echo "CHANGES=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          git commit -m "chore: sync from upstream/main"
+          echo "CHANGES=true" >> $GITHUB_OUTPUT
+
+      - name: Push changes
+        if: steps.merge.outputs.CHANGES == 'true'
         run: |
-          git merge upstream/main --ff-only || git merge upstream/main -m "chore: sync from upstream/main"
           git push origin main
-
-      - name: Notify on conflict
-        if: steps.conflict_check.outputs.HAS_CONFLICT == 'true'
-        run: |
-          echo "::warning::Merge conflict detected with upstream/main. Manual resolution required."
-          exit 1

@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.invoke
-
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor

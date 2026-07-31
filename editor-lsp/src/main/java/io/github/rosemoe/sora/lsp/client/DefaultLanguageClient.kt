@@ -34,6 +34,7 @@ import io.github.rosemoe.sora.lsp.utils.toFileUri
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams
 import org.eclipse.lsp4j.ApplyWorkspaceEditResponse
 import org.eclipse.lsp4j.ConfigurationParams
+import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.MessageActionItem
 import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.PublishDiagnosticsParams
@@ -107,9 +108,15 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
         val serverName = context.serverName
         diagnosticsContainer.clearDiagnostics(uri)
 
+        val diagnostics = if (shouldIgnoreWarnings(serverName)) {
+            publishDiagnosticsParams.diagnostics.filter { it.severity != DiagnosticSeverity.Warning }
+        } else {
+            publishDiagnosticsParams.diagnostics
+        }
+
         diagnosticsContainer.addDiagnostics(
             uri,
-            publishDiagnosticsParams.diagnostics
+            diagnostics
         )
 
         val editor = context.getEditor(uri)
@@ -136,5 +143,7 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
 
     companion object {
         private const val TAG = "DefaultLanguageClient"
+
+        var shouldIgnoreWarnings: (String) -> Boolean = { false }
     }
 }

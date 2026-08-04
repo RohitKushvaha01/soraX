@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -20,40 +20,29 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.lang.styling;
 
-package io.github.rosemoe.sora.lsp.utils
+import androidx.annotation.NonNull;
 
-import java.io.File
-import java.net.URI
-import kotlin.io.path.pathString
-import kotlin.io.path.toPath
+import java.util.List;
 
-fun FileUri.toFileUri(): String {
-    return toUri().toString()
-}
+import io.github.rosemoe.sora.lang.styling.line.LineAnchorStyle;
 
-fun String.toFileUri(): FileUri {
-    return FileUri(this)
-}
+/**
+ * Provider for extra styles that are not language specific.
+ *
+ * @author KonerDev
+ */
+@FunctionalInterface
+public interface ExtraStylesProvider {
 
-fun String.toURI(): URI {
-    return URI(this)
-}
+    /**
+     * Get extra styles for the given line.
+     *
+     * @param line The 0-indexed line number.
+     * @param styles The list to add extra styles to.
+     */
+    void getExtraStyles(int line, @NonNull List<LineAnchorStyle> styles);
 
-fun URI.toFileUri(): FileUri {
-    return FileUri(this.toPath().pathString)
-}
-
-@JvmInline
-value class FileUri(
-    val path: String
-) {
-    fun toFile(): File {
-        return File(path)
-    }
-
-    fun toUri(): URI {
-        return toFile().toURI()
-    }
 }

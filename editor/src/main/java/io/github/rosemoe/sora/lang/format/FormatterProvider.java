@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
  *    Copyright (C) 2020-2024  Rosemoe
@@ -20,40 +20,32 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
+package io.github.rosemoe.sora.lang.format;
 
-package io.github.rosemoe.sora.lsp.utils
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import java.io.File
-import java.net.URI
-import kotlin.io.path.pathString
-import kotlin.io.path.toPath
+import io.github.rosemoe.sora.widget.CodeEditor;
 
-fun FileUri.toFileUri(): String {
-    return toUri().toString()
-}
+/**
+ * Provider for custom formatters.
+ *
+ * @author KonerDev
+ */
+@FunctionalInterface
+public interface FormatterProvider {
 
-fun String.toFileUri(): FileUri {
-    return FileUri(this)
-}
+    /**
+     * Get a formatter for the specified editor.
+     *
+     * <p>If no custom formatter is available, this method should return
+     * {@code null} to allow the editor to fall back to the language formatter.</p>
+     *
+     * @param editor The current code editor.
+     * @return A custom formatter, or {@code null} to use the default formatter
+     */
+    @Nullable
+    Formatter getFormatter(@NonNull CodeEditor editor);
 
-fun String.toURI(): URI {
-    return URI(this)
-}
-
-fun URI.toFileUri(): FileUri {
-    return FileUri(this.toPath().pathString)
-}
-
-@JvmInline
-value class FileUri(
-    val path: String
-) {
-    fun toFile(): File {
-        return File(path)
-    }
-
-    fun toUri(): URI {
-        return toFile().toURI()
-    }
 }

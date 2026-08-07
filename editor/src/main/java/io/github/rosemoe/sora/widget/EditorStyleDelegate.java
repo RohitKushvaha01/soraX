@@ -170,14 +170,6 @@ public class EditorStyleDelegate implements StyleReceiver, InlayHintProvider, Di
     }
 
     @Override
-    public void setInlayHints(@NonNull AnalyzeManager sourceManager, @Nullable InlayHintsContainer inlayHints) {
-        var editor = editorRef.get();
-        if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
-            runOnUiThread(() -> editor.setInlayHints(inlayHints));
-        }
-    }
-
-    @Override
     public void updateBracketProvider(@NonNull AnalyzeManager sourceManager, @Nullable BracketsProvider provider) {
         var editor = editorRef.get();
         if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager() && bracketsProvider != provider) {

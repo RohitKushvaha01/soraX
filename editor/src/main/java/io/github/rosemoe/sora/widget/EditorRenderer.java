@@ -445,10 +445,26 @@ public class EditorRenderer {
         if ((styles = editor.getStyles()) != null) {
             if (styles.styleTypeCount != null) {
                 var count = styles.styleTypeCount.get(LineSideIcon.class);
-                if (count == null) {
-                    return false;
+                if (count != null && count.value > 0) {
+                    return true;
                 }
-                return count.value > 0;
+            }
+        }
+        var providers = editor.getExtraStylesProviders();
+        if (!providers.isEmpty()) {
+            var first = editor.getFirstVisibleLine();
+            var last = editor.getLastVisibleLine();
+            var extra = new ArrayList<LineAnchorStyle>();
+            for (int i = first; i <= last; i++) {
+                extra.clear();
+                for (int j = 0; j < providers.size(); j++) {
+                    providers.get(j).getExtraStyles(i, extra);
+                }
+                for (var s : extra) {
+                    if (s instanceof LineSideIcon) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -1103,10 +1119,12 @@ public class EditorRenderer {
             }
         }
 
-        ExtraStylesProvider provider = editor.getExtraStylesProvider();
-        if (provider != null) {
+        var providers = editor.getExtraStylesProviders();
+        if (!providers.isEmpty()) {
             List<LineAnchorStyle> extra = new ArrayList<>();
-            provider.getExtraStyles(line, extra);
+            for (int j = 0; j < providers.size(); j++) {
+                providers.get(j).getExtraStyles(line, extra);
+            }
             if (!extra.isEmpty()) {
                 if (result == null) {
                     result = new LineStyles(line);

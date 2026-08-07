@@ -367,9 +367,6 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) : InlayHintPro
                 it.invalidateDiagnostics()
                 it.invalidateHighlightTexts()
             }
-            if (it.highlightTexts != null) {
-                it.post { it.highlightTexts = null }
-            }
         }
     }
 }

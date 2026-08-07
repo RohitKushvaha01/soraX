@@ -360,4 +360,3 @@ class LspTestActivity : BaseEditorActivity() {
         }
     }
 }
-

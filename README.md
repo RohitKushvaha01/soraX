@@ -59,7 +59,7 @@ git merge upstream/main
 ```
 
 Because `main` is based on upstream with only a few local commits, this is usually a clean
-fast-forward. A conflict can only appear in a file that both you and upstream changed — resolve it by
+fast-forward. A conflict can only appear in a file that both you and upstream changed, resolve it by
 keeping your patch's intent, commit the merge, and push:
 
 ```bash
